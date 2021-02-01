@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 import {
   ClientIDSecretCredentials,
   ParsedAuthorizationResponse,
@@ -23,10 +25,9 @@ const PayPalConnection: ProcessorConnection<
   website: 'https://paypal.com',
 
   configuration: {
-    accountId:
-      '... Paste something here that uniquely identifies the PayPal account',
-    clientId: '...Paste your sandbox PayPal client ID here...',
-    clientSecret: '...Paste your sandbox PayPal client secret here...',
+    accountId: process.env.ACCOUNT_ID!,
+    clientId: process.env.CLIENT_ID!,
+    clientSecret: process.env.CLIENT_SECRET!,
   },
 
   /**
