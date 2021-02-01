@@ -37,7 +37,59 @@ const PayPalConnection: ProcessorConnection<
   authorize(
     request: RawAuthorizationRequest<ClientIDSecretCredentials, PayPalOrder>,
   ): Promise<ParsedAuthorizationResponse> {
-    throw new Error('Not Implemented');
+    let str = `${ request.processorConfig.clientId }:${ request.processorConfig.clientSecret }`
+    let auth = Buffer.from(str).toString("base64")
+    let url = 'https://api-m.sandbox.paypal.com/v2/checkout/orders/' + request.paymentMethod.orderId + '/authorize'
+
+    return HTTPClient.request(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${auth}`
+      },
+      method: 'post',
+      body: ''
+    })
+    .then((response) => {
+      let responseText = JSON.parse(response.responseText)
+      let status = responseText.purchase_units[0].payments.authorizations[0].status
+      let transactionId = responseText.purchase_units[0].payments.authorizations[0].id
+      let result: ParsedAuthorizationResponse
+
+      if (response.statusCode == 201) {
+        if (status == 'VOIDED') {
+          result = {
+            processorTransactionId: transactionId,
+            transactionStatus: 'CANCELLED'
+          }
+        }
+        else if (status == 'DENIED') {
+          result = {
+            declineReason: 'Insufficient funds',
+            transactionStatus: 'DECLINED'
+          }
+        }
+        else {
+          result = {
+            processorTransactionId: transactionId,
+            transactionStatus: 'AUTHORIZED'
+          }
+        }
+      }
+      else if (response.statusCode == 401) {
+        result = {
+          errorMessage: 'Invalid credentials',
+          transactionStatus: 'FAILED'
+        }
+      }
+      else if (response.statusCode == 422) {
+        result = {
+          errorMessage: 'Transaction has already been authorised',
+          transactionStatus: 'FAILED'
+        }
+      }
+
+      return result!
+    })
   },
 
   /**
