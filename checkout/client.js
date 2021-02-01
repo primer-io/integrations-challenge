@@ -13,7 +13,17 @@ function renderPayPalButton() {
    * that you receive from PayPal
    */
   const options = {
-    /** */
+    createOrder: (data, actions) => {
+      return actions.order.create({
+        intent: "AUTHORIZE",
+        purchase_units: [{
+          amount: {
+            currency_code: "EUR",
+            value: "12.99"
+          }
+        }]
+      })
+    }
   };
 
   window.paypal.Buttons(options).render(button);
