@@ -23,6 +23,9 @@ function renderPayPalButton() {
           }
         }]
       })
+    },
+    onApprove: (data, actions) => {
+      onAuthorizeTransaction(data.orderID)
     }
   };
 
