@@ -58,5 +58,8 @@ function onCancelTransaction() {
     method: 'post',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ orderId: authResponse.processorTransactionId }),
-  });
+  })
+  .then(() => {
+    document.getElementById('cancel-button').setAttribute('disabled', true)
+  })
 }
