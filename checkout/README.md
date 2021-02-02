@@ -2,9 +2,7 @@
 The goal of the challenge is to implement a Processor connection using PayPal’s REST API and then implement it on the client side.
 
 ## Contents 📜
-- [Checkout - Payment Methods](#checkout---payment-methods)
-  - [Contents 📜](#contents-)
-  - [Research 🤔](#research-)
+  - [Research](#research-)
     - [Lifecycle of a Digital Transaction](#lifecycle-of-a-digital-transaction)
     - [PayPal Documentation](#paypal-documentation)
       - [Getting Credentials](#getting-credentials)
@@ -14,13 +12,13 @@ The goal of the challenge is to implement a Processor connection using PayPal’
       - [Cancelling Transactions](#cancelling-transactions)
       - [Payment Button](#payment-button)
     - [Repository Exploration](#repository-exploration)
-  - [Development 💻](#development-)
+  - [Development](#development-)
     - [Adding Credentials](#adding-credentials)
     - [Frontend](#frontend)
     - [Backend](#backend)
       - [authorize](#authorize)
       - [cancel](#cancel)
-  - [Reflection ↩️](#reflection-️)
+  - [Reflection](#reflection-️)
 
 ## Research 🤔
 
