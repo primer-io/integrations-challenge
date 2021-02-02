@@ -1,15 +1,28 @@
 # Checkout - Payment Methods
 The goal of the challenge is to implement a Processor connection using PayPal’s REST API and then implement it on the client side.
 
-- Research
-  - Lifecycle of a Digital Transaction
-  - PayPal Documentation
-- Development
-  - Frontend
-  - Backend
-- Reflection
+# Contents 📜
+- [Checkout - Payment Methods](#checkout---payment-methods)
+- [Contents 📜](#contents-)
+- [Research 🤔](#research-)
+  - [Lifecycle of a Digital Transaction](#lifecycle-of-a-digital-transaction)
+  - [PayPal Documentation](#paypal-documentation)
+    - [Getting Credentials](#getting-credentials)
+    - [Making API Calls](#making-api-calls)
+    - [Creating Orders](#creating-orders)
+    - [Authorising Payments](#authorising-payments)
+    - [Cancelling Transactions](#cancelling-transactions)
+    - [Payment Button](#payment-button)
+  - [Repository Exploration](#repository-exploration)
+- [Development 💻](#development-)
+  - [Adding Credentials](#adding-credentials)
+  - [Frontend](#frontend)
+  - [Backend](#backend)
+    - [authorize](#authorize)
+    - [cancel](#cancel)
+- [Reflection ↩️](#reflection-️)
 
-# Research
+# Research 🤔
 
 ## Lifecycle of a Digital Transaction
 [This Braintree article](https://articles.braintreepayments.com/get-started/transaction-lifecycle) breaks down a successful transaction into 4 distinct statuses:
@@ -53,7 +66,7 @@ In `setup.js`, one thing that stuck out was the `URL` string and the query param
 In `client.js`, I noticed that the `onAuthorizeTransaction` function looks similar to the `cURL` call that I saw in the documentation. I also saw the comments about the PayPal SDK, and went back to documentation to find out more, starting with what to pass to the options object. 
 Lastly, in `PayPal.ts`, I saw the type imports, so I looked at `tsconfig.json`, which led me to the `app-framework` folder. I briefly glanced over the type definitions, as I expect to come back here a lot. With all of this information at hand, I was ready to begin.
 
-# Development 
+# Development 💻
 
 ## Adding Credentials
 I had to add my credentials to be able to load the PayPal SDK. To avoid exposing the API keys publicly, I decided to add `dotenv` as a dependency. I created a `.env` file, added my environment variables and changed the `.gitignore`. After that, the button started to render correctly.
@@ -98,7 +111,6 @@ If code is 401, return errorMessage = ‘Invalid credentials’ and ‘FAILED’
 If code is 422, return errorMessage = ‘Transaction has already been authorised’ and ‘FAILED’
 
 Else, I return errorMessage = ‘Unknown error’ and ‘FAILED’
-
 ```
 
 ### cancel
@@ -114,5 +126,13 @@ If statusCode is 401 return errorMessage = ‘Invalid credentials’ and ‘FAIL
 If statusCode is 422, return errorMessage = ‘Transaction has already been voided’ and ‘FAILED’
 
 Else, return errorMessage = ‘Unknown error’ and ‘FAILED’
-
 ```
+
+To get some visibility on whether the button is working, I logged my results to the console. I found that I get a success the first time, but I am still able to click the button and get `422` responses. To fix that, I went back to `client.js` and added code to disable the button again on successful cancellation.
+
+# Reflection ↩️
+I can definitely say that I have enjoyed completing this challenge! It felt like working on a real project, rather than doing a mundane tech test, and it is really cool that you have created something unique, it definitely makes Primer stand out! 
+
+Prior to this challenge, I have worked with third-party APIs, but never to this extent, so I have learned a lot today. I also had very limited experience with TypeScript, therefore I believe that my biggest success today was understanding the file structure and being able to find what I want. One area that I could improve is my debug and API testing process. Although I achieved what I wanted with cURL, I could have saved time by using Postman or Insomnia. 
+
+I hope that my solution is good and I am excited to discuss it!
