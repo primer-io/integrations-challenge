@@ -22,7 +22,7 @@ window.primer = {
             reject(err);
           };
 
-          console.log('Loadinng PayPal SDK:');
+          console.log('Loading PayPal SDK:');
           document.body.appendChild(script);
         });
     });
