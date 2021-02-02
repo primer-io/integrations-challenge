@@ -19,7 +19,7 @@ The goal of the challenge is to implement a Processor connection using PayPal’
 4. Settled
 
 The first stage of a payment lifecycle is an authorisation request from the merchant to the payment gateway (e.g. Braintree or Sage Pay), which is a layer of security between the merchant and the card’s issuing bank. A payment gateway is somewhat similar to what a physical POS terminal does in a brick-and-mortar shop - it validates the customer’s card details and securely transfers them to the bank. If the bank then authorises the transaction, a success code will be returned and there will be a hold put on the funds in the customer’s account (but no actual credit/debit just yet). 
-An authorised transaction is then submitted for settlement. The simplest (and default) way is immediate submission, but separate authorisation and capture are also typically supported. This may be useful for businesses that charge money when the customer’s order is fulfilled (e.g. after a guest arrives at the hotel). On successful submission, PayPal returns a Settlement Pending (```4002```) code, which should then change to Settled (```4000```), provided that the issuing bank approves the settlement. At this stage, a transaction is captured, meaning that funds are debited from the customer account and routed to the merchant.
+An authorised transaction is then submitted for settlement. The simplest (and default) way is immediate submission, but separate authorisation and capture are also typically supported. This may be useful for businesses that charge money when the customer’s order is fulfilled (e.g. after a guest arrives at the hotel). On successful submission, PayPal returns a Settlement Pending (`4002`) code, which should then change to Settled (```4000```), provided that the issuing bank approves the settlement. At this stage, a transaction is captured, meaning that funds are debited from the customer account and routed to the merchant.
 
 It is important to note that the above relates to a lifecycle of a successful transaction. If something goes wrong, there are many other possible statuses, as outlined [here](https://developers.braintreepayments.com/reference/general/statuses#transaction).
 
@@ -68,3 +68,22 @@ After writing the method, I pressed the button and my test user was prompted to 
 Writing ```onApprove``` was a little bit less straightforward, as the documentation only deals with transactions of ```“CAPTURE”``` intent. I had to retrieve the order ID from the order we just created. To get some visibility, I ```console.logged``` the data and found ```orderID``` in the object. After that, the only thing remaining was to call ```onAuthoriseTransaction(data.orderID)```.
 
 Testing in browser would now crash my server, with an error pointing to the authorise method in ```PayPal.ts```, which is exactly what I was hoping for.
+
+## Backend
+
+### authorize
+With client-side out of the way, I moved on to implementing the ```authorize``` method. The first thing to figure out there was authentication. From my research I know that I need to use base64 encoding on the ```<client_id>:<secret>``` string. 
+
+Thanks to TypeScript’s autocompletion, I quickly identified that I can get to these values through the ```processorConfig``` property of the ```request```. To confirm this I went to the type definitions and saw that ```request``` is of type ```RawAuthorizationRequest```, which has ```ClientIDSecretCredentials``` as a parameter and extends the ```IProcessorRequest``` interface (which has the ```proccessorConfig``` property).
+
+To encode the string, I used the global ```Buffer``` object and then used it in the ```Authorization``` header of the ```POST``` request to create an authorisation, as per the documentation. When trying to look into the response, I was initially met with an ```“UNSUPPORTED_MEDIA_TYPE”``` error, so I took a step back and experimented with ```cURL``` requests. It turned out that I have misread the documentation and used ```Accept``` header instead of ```Content-Type```. From ```HTTPClient.ts```, I saw that a response should include ```statusCode``` and ```responseText```.
+
+I managed to get a ```responseText``` for a successful authorisation, but I did not know where to see all possible status codes, as I could only find the status strings, such as ```CREATED``` or ```APPROVED```. Therefore, I added a ```console.log(response.statusCode)``` statement and tried to think about what potential edge cases I could test for. Here is what I found:
+
+- ```201```: Success
+- ```401```: Invalid Credentials
+- ```422```: Repeat authorisation request (could replicate by sending a ```cURL``` request with the same ```orderID``` twice)
+
+Another test case that crossed my mind is what happens if there are insufficient funds. I tried to simulate this scenario by changing the PayPal balance and increasing the transaction amount, but the payment method would default to a credit card with unlimited funds. Enabling the Negative Testing option on the account, as suggested [here](https://www.paypal-community.com/t5/Sandbox-Environment/Sandbox-Negative-Testing-of-insufficient-funds/td-p/1951260) did not seem to have any effect either. Although it is not clear, the documentation suggests that ```DENIED``` and ```VOIDED``` transactions fall under the ```201``` code.
+
+Equipped with this information, I went to read the ```ParsedAuthorisationResponse``` definition and saw that there are three distinct return types. This nudged me towards writing a conditional statement with 4 branches: 
