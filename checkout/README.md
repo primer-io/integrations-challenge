@@ -1,30 +1,30 @@
 # Checkout - Payment Methods
 The goal of the challenge is to implement a Processor connection using PayPal’s REST API and then implement it on the client side.
 
-# Contents 📜
+## Contents 📜
 - [Checkout - Payment Methods](#checkout---payment-methods)
-- [Contents 📜](#contents-)
-- [Research 🤔](#research-)
-  - [Lifecycle of a Digital Transaction](#lifecycle-of-a-digital-transaction)
-  - [PayPal Documentation](#paypal-documentation)
-    - [Getting Credentials](#getting-credentials)
-    - [Making API Calls](#making-api-calls)
-    - [Creating Orders](#creating-orders)
-    - [Authorising Payments](#authorising-payments)
-    - [Cancelling Transactions](#cancelling-transactions)
-    - [Payment Button](#payment-button)
-  - [Repository Exploration](#repository-exploration)
-- [Development 💻](#development-)
-  - [Adding Credentials](#adding-credentials)
-  - [Frontend](#frontend)
-  - [Backend](#backend)
-    - [authorize](#authorize)
-    - [cancel](#cancel)
-- [Reflection ↩️](#reflection-️)
+  - [Contents 📜](#contents-)
+  - [Research 🤔](#research-)
+    - [Lifecycle of a Digital Transaction](#lifecycle-of-a-digital-transaction)
+    - [PayPal Documentation](#paypal-documentation)
+      - [Getting Credentials](#getting-credentials)
+      - [Making API Calls](#making-api-calls)
+      - [Creating Orders](#creating-orders)
+      - [Authorising Payments](#authorising-payments)
+      - [Cancelling Transactions](#cancelling-transactions)
+      - [Payment Button](#payment-button)
+    - [Repository Exploration](#repository-exploration)
+  - [Development 💻](#development-)
+    - [Adding Credentials](#adding-credentials)
+    - [Frontend](#frontend)
+    - [Backend](#backend)
+      - [authorize](#authorize)
+      - [cancel](#cancel)
+  - [Reflection ↩️](#reflection-️)
 
-# Research 🤔
+## Research 🤔
 
-## Lifecycle of a Digital Transaction
+### Lifecycle of a Digital Transaction
 [This Braintree article](https://articles.braintreepayments.com/get-started/transaction-lifecycle) breaks down a successful transaction into 4 distinct statuses:
 1. Authorised
 2. Submitted for Settlement
@@ -36,29 +36,29 @@ An authorised transaction is then submitted for settlement. The simplest (and de
 
 It is important to note that the above relates to a lifecycle of a successful transaction. If something goes wrong, there are many other possible statuses, as outlined [here](https://developers.braintreepayments.com/reference/general/statuses#transaction).
 
-## PayPal Documentation
+### PayPal Documentation
 
-### Getting Credentials
+#### Getting Credentials
 After creating a developer account, I went on to explore the Get Started page of the API documentation to identify the best place to start, which was retrieving the API credentials that I could use in the `PayPal.ts` file. As it is not a live application, I chose the Sandbox tab and took note of the credentials. After this, I created the sandbox accounts. When creating an account, I was given two options to choose from: Personal or Business. Given the scenario, I created both as I needed a merchant account for the server-side and a customer account for testing the client-side.
 
-### Making API Calls
+#### Making API Calls
 After getting my credentials, I started to explore how can I use them to make API calls. From the sample `cURL` call to the Orders API, I saw that the `Authorization` header can take two authentication schemes : `Bearer <Access-Token>`, or `Basic <client_id:secret>`. Although I acknowledge that it is more secure to use the `Bearer` scheme, I decided to start with the `Basic` scheme for simplicity (Access Tokens have a brief lifetime and require regeneration and extra error handling). I tried to make a sample call to create an order myself, but I was met with an `“Unable to read x509 certificate”` error. [This page on StackOverflow](https://stackoverflow.com/questions/60829911/unable-to-read-x509-certificate-when-making-https-calls-to-paypals-subscripti) suggested to use base64 encoding, so I converted the `<client_id>:<secret>` string using an online converter tool. That resolved the error and I made the call successfully.  
 
 After skimming through the API Reference, I identified that for this exercise, I will need to use the Orders API. I was happy to find information on almost the whole lifecycle on the same page (cancelling transactions was in the Payments API).
 
-### Creating Orders
+#### Creating Orders
 To create an order, we can send a `POST` request, where two things are required in the `body`: `intent` and `purchase_units`. There are two possible values for `intent`: `CAPTURE` and `AUTHORISE`. Taking the challenge into account, I will need the `AUTHORISE` value, so that payments are not captured immediately. I also saw that `AUTHORISE` `intent` only works when there is one `purchase_unit`.
 
-### Authorising Payments
+#### Authorising Payments
 From the response of the create order request, I can get the order ID to use in the authorisation `POST` request. The response includes a status code, based on which I should be able to know the results.
 
-### Cancelling Transactions
+#### Cancelling Transactions
 Knowing how to cancel transactions was not critical for me to begin development, so I postponed this part of my research until I tried to tackle implementing the cancel method. After being unable to find any reference to cancelling orders or authorisations in the Orders API documentation, I decided to google how to do it, which led me to PayPal’s Payments API. To cancel a transaction, an authorisation needs to be voided by sending a `POST` request and the only piece of information I need for that is the transaction ID.
 
-### Payment Button
+#### Payment Button
 In the [Checkout documentation](https://developer.paypal.com/docs/checkout/), I found that the PayPal button’s `options` object needs two keys: `createOrder` and `onApprove`. From my previous research on the Orders API, I quickly realised that I can use `createOrder` to create an order with some currency and amount and get an order ID on successful response. I can then use that in `onApprove`, which will call the `onAuthorizeTransaction` method with the value of order ID as an argument.
 
-## Repository Exploration
+### Repository Exploration
 After reading the instructions and conducting the initial research on transactions and PayPal’s Orders API, I began to explore the file structure of the repository to identify any useful information to get me started. I looked at the `server.ts` file and took note of the defined routes. I have also looked at `index.html` to identify what HTML elements I will be working with and what scripts will be run. 
 
 In `setup.js`, one thing that stuck out was the `URL` string and the query parameters in it: `currency=EUR`, `client-id` and `intent=authorize`. I recognised the config route of our server and saw that a `clientId` variable is used in the `url` string. To figure out the origin of the data, I went back to `server.ts` and eventually traced everything back to `PayPal.ts`. I have also noticed the `console.log()` statements. At this stage, my console was showing `‘Failed to load PayPal SDK’`, as I have not added credentials yet.
@@ -66,12 +66,12 @@ In `setup.js`, one thing that stuck out was the `URL` string and the query param
 In `client.js`, I noticed that the `onAuthorizeTransaction` function looks similar to the `cURL` call that I saw in the documentation. I also saw the comments about the PayPal SDK, and went back to documentation to find out more, starting with what to pass to the options object. 
 Lastly, in `PayPal.ts`, I saw the type imports, so I looked at `tsconfig.json`, which led me to the `app-framework` folder. I briefly glanced over the type definitions, as I expect to come back here a lot. With all of this information at hand, I was ready to begin.
 
-# Development 💻
+## Development 💻
 
-## Adding Credentials
+### Adding Credentials
 I had to add my credentials to be able to load the PayPal SDK. To avoid exposing the API keys publicly, I decided to add `dotenv` as a dependency. I created a `.env` file, added my environment variables and changed the `.gitignore`. After that, the button started to render correctly.
 
-## Frontend
+### Frontend
 After adding the credentials, I identified that it will make more sense to begin my work with implementing `renderPayPalButton` in `client.js` as I will be able to start with creating an order, which is the first step to consider, according to the Orders API. 
 
 For `createOrder`, I have followed the `actions.order.create()` structure as suggested by the documentation. The example only included `value`, so to fully adhere to the goal, I would also need to set `currency_code` to `“EUR"` and intent to `“AUTHORIZE”`. I also understand that the SDK URL in `setup.js` already has those parameters, but I decided to leave them in to be explicit.
@@ -82,9 +82,9 @@ Writing `onApprove` was a little bit less straightforward, as the documentation 
 
 Testing in browser would now crash my server, with an error pointing to the authorise method in `PayPal.ts`, which is exactly what I was hoping for.
 
-## Backend
+### Backend
 
-### authorize
+#### authorize
 With client-side out of the way, I moved on to implementing the `authorize` method. The first thing to figure out there was authentication. From my research I know that I need to use base64 encoding on the `<client_id>:<secret>` string. 
 
 Thanks to TypeScript’s autocompletion, I quickly identified that I can get to these values through the `processorConfig` property of the `request`. To confirm this I went to the type definitions and saw that `request` is of type `RawAuthorizationRequest`, which has `ClientIDSecretCredentials` as a parameter and extends the `IProcessorRequest` interface (which has the `proccessorConfig` property).
@@ -113,7 +113,7 @@ If code is 422, return errorMessage = ‘Transaction has already been authorised
 Else, I return errorMessage = ‘Unknown error’ and ‘FAILED’
 ```
 
-### cancel
+#### cancel
 Writing the request part of the method was very similar to what I had already done in `authorize`, but with fewer details and the types involved were easier to decipher too! I could also reuse the string encoding from `authorise`. 
 
 A successful response should have code `204` and return a `transactionStatus` (and optionally `declineReason` and `errorMessage`). Similarly to creating an authorisation, you cannot create them twice, so I used `422` again. Invalid credentials can always be a problem, so I reused 401 too. I could not think of any test cases where `declineReason` would need to be returned, so I wrote the following conditional statement:
@@ -130,7 +130,7 @@ Else, return errorMessage = ‘Unknown error’ and ‘FAILED’
 
 To get some visibility on whether the button is working, I logged my results to the console. I found that I get a success the first time, but I am still able to click the button and get `422` responses. To fix that, I went back to `client.js` and added code to disable the button again on successful cancellation.
 
-# Reflection ↩️
+## Reflection ↩️
 I can definitely say that I have enjoyed completing this challenge! It felt like working on a real project, rather than doing a mundane tech test, and it is really cool that you have created something unique, it definitely makes Primer stand out! 
 
 Prior to this challenge, I have worked with third-party APIs, but never to this extent, so I have learned a lot today. I also had very limited experience with TypeScript, therefore I believe that my biggest success today was understanding the file structure and being able to find what I want. One area that I could improve is my debug and API testing process. Although I achieved what I wanted with cURL, I could have saved time by using Postman or Insomnia. 
