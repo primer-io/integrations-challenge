@@ -2,13 +2,13 @@
 
 The goal of the challenge is to implement a Processor connection using PayPal’s REST API and then implement it on the client side. Before beginning the task, I have broken down the challenge into the following items:
 
-[Research](#research)
-    [Lifecycle of a Digital Transaction](#lifecycle-of-a-digital-transaction)
-    [PayPal Documentation](#paypal-documentation)
-Development
-    Frontend
-    Backend
-Reflection
+- Research
+  - Lifecycle of a Digital Transaction
+  - PayPal Documentation
+- Development
+  - Frontend
+  - Backend
+- Reflection
 
 # Research
 
