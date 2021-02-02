@@ -1,6 +1,5 @@
 # Checkout - Payment Methods
-
-The goal of the challenge is to implement a Processor connection using PayPal’s REST API and then implement it on the client side. Before beginning the task, I have broken down the challenge into the following items:
+The goal of the challenge is to implement a Processor connection using PayPal’s REST API and then implement it on the client side.
 
 - Research
   - Lifecycle of a Digital Transaction
@@ -45,3 +44,27 @@ Knowing how to cancel transactions was not critical for me to begin development,
 
 ### Payment Button
 In the [Checkout documentation](https://developer.paypal.com/docs/checkout/), I found that the PayPal button’s ```options``` object needs two keys: ```createOrder``` and ```onApprove```. From my previous research on the Orders API, I quickly realised that I can use ```createOrder``` to create an order with some currency and amount and get an order ID on successful response. I can then use that in ```onApprove```, which will call the ```onAuthorizeTransaction``` method with the value of order ID as an argument.
+
+## Repository Exploration
+After reading the instructions and conducting the initial research on transactions and PayPal’s Orders API, I began to explore the file structure of the repository to identify any useful information to get me started. I looked at the ```server.ts``` file and took note of the defined routes. I have also looked at ```index.html``` to identify what HTML elements I will be working with and what scripts will be run. 
+
+In ```setup.js```, one thing that stuck out was the ```URL``` string and the query parameters in it: ```currency=EUR```, ```client-id``` and ```intent=authorize```. I recognised the config route of our server and saw that a ```clientId``` variable is used in the ```url``` string. To figure out the origin of the data, I went back to ```server.ts``` and eventually traced everything back to ```PayPal.ts```. I have also noticed the ```console.log()``` statements. At this stage, my console was showing ```‘Failed to load PayPal SDK’```, as I have not added credentials yet.
+
+In ```client.js```, I noticed that the ```onAuthorizeTransaction``` function looks similar to the ```cURL``` call that I saw in the documentation. I also saw the comments about the PayPal SDK, and went back to documentation to find out more, starting with what to pass to the options object. 
+Lastly, in ```PayPal.ts```, I saw the type imports, so I looked at ```tsconfig.json```, which led me to the ```app-framework``` folder. I briefly glanced over the type definitions, as I expect to come back here a lot. With all of this information at hand, I was ready to begin.
+
+# Development 
+
+## Adding Credentials
+I had to add my credentials to be able to load the PayPal SDK. To avoid exposing the API keys publicly, I decided to add ```dotenv``` as a dependency. I created a ```.env``` file, added my environment variables and changed the ```.gitignore```. After that, the button started to render correctly.
+
+## Frontend
+After adding the credentials, I identified that it will make more sense to begin my work with implementing ```renderPayPalButton``` in ```client.js``` as I will be able to start with creating an order, which is the first step to consider, according to the Orders API. 
+
+For ```createOrder```, I have followed the ```actions.order.create()``` structure as suggested by the documentation. The example only included ```value```, so to fully adhere to the goal, I would also need to set ```currency_code``` to ```“EUR"``` and intent to ```“AUTHORIZE”```. I also understand that the SDK URL in ```setup.js``` already has those parameters, but I decided to leave them in to be explicit.
+
+After writing the method, I pressed the button and my test user was prompted to make an EUR 12.99 purchase, as expected. In the sandbox, transaction is showing as pending authorisation. Same on the merchant’s side.
+
+Writing ```onApprove``` was a little bit less straightforward, as the documentation only deals with transactions of ```“CAPTURE”``` intent. I had to retrieve the order ID from the order we just created. To get some visibility, I ```console.logged``` the data and found ```orderID``` in the object. After that, the only thing remaining was to call ```onAuthoriseTransaction(data.orderID)```.
+
+Testing in browser would now crash my server, with an error pointing to the authorise method in ```PayPal.ts```, which is exactly what I was hoping for.
