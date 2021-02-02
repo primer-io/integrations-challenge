@@ -24,6 +24,7 @@ const PayPalConnection: ProcessorConnection<
 
   website: 'https://paypal.com',
 
+  //please create a .env file in the root directory and add these three variables there
   configuration: {
     accountId: process.env.ACCOUNT_ID!,
     clientId: process.env.CLIENT_ID!,
@@ -37,6 +38,7 @@ const PayPalConnection: ProcessorConnection<
   authorize(
     request: RawAuthorizationRequest<ClientIDSecretCredentials, PayPalOrder>,
   ): Promise<ParsedAuthorizationResponse> {
+    //encoding the client_id:secret string to base 64 and concatenating the URL string for request
     let str = `${ request.processorConfig.clientId }:${ request.processorConfig.clientSecret }`
     let auth = Buffer.from(str).toString("base64")
     let url = 'https://api-m.sandbox.paypal.com/v2/checkout/orders/' + request.paymentMethod.orderId + '/authorize'
@@ -55,6 +57,10 @@ const PayPalConnection: ProcessorConnection<
       let transactionId = responseText.purchase_units[0].payments.authorizations[0].id
       let result: ParsedAuthorizationResponse
 
+      /*
+      * returning a ParsedAuthorisationResponse
+      * value is based on the status code of the response and the type definition of ParsedAuthorisationResponse
+      */
       if (response.statusCode == 201) {
         if (status == 'VOIDED') {
           result = {
@@ -99,6 +105,7 @@ const PayPalConnection: ProcessorConnection<
   cancel(
     request: RawCancelRequest<ClientIDSecretCredentials>,
   ): Promise<ParsedCaptureResponse> {
+    //encoding the client_id:secret string to base 64 and concatenating the URL string for request
     let str = `${ request.processorConfig.clientId }:${ request.processorConfig.clientSecret }`
     let auth = Buffer.from(str).toString("base64")
     let url = 'https://api-m.sandbox.paypal.com/v2/payments/authorizations/' + request.processorTransactionId + '/void'
@@ -113,6 +120,10 @@ const PayPalConnection: ProcessorConnection<
     .then((response) => {
       let result: ParsedCaptureResponse
       
+      /*
+      * returning a ParsedCaptureResponse
+      * value is based on the status code of the response and the type definition of ParsedCaptureResponse
+      */
       if (response.statusCode == 204) {
         result = {
           transactionStatus: 'CANCELLED'
