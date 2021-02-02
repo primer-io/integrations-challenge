@@ -99,7 +99,46 @@ const PayPalConnection: ProcessorConnection<
   cancel(
     request: RawCancelRequest<ClientIDSecretCredentials>,
   ): Promise<ParsedCaptureResponse> {
-    throw new Error('Not Implemented');
+    let str = `${ request.processorConfig.clientId }:${ request.processorConfig.clientSecret }`
+    let auth = Buffer.from(str).toString("base64")
+    let url = 'https://api-m.sandbox.paypal.com/v2/payments/authorizations/' + request.processorTransactionId + '/void'
+    return HTTPClient.request(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${auth}`
+      },
+      method: 'post',
+      body: ''
+    })
+    .then((response) => {
+      let result: ParsedCaptureResponse
+      
+      if (response.statusCode == 204) {
+        result = {
+          transactionStatus: 'CANCELLED'
+        }
+      }
+      else if (response.statusCode == 401) {
+        result = {
+          errorMessage: 'Invalid credentials',
+          transactionStatus: 'FAILED'
+        }
+      }
+      else if (response.statusCode == 422) {
+        result = {
+          errorMessage: 'Transaction has aready been voided',
+          transactionStatus: 'FAILED'
+        }
+      }
+      else {
+        result = {
+          errorMessage: 'Unknown error',
+          transactionStatus: 'FAILED'
+        }
+      }
+
+      return result!
+    })
   },
 
   /**
