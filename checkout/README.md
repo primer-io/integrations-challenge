@@ -88,11 +88,31 @@ Another test case that crossed my mind is what happens if there are insufficient
 
 Equipped with this information, I went to read the `ParsedAuthorisationResponse` definition and saw that there are three distinct return types. This nudged me towards writing a conditional statement with 4 branches: 
 ```
-    If code is 201, then
-        If status is VOIDED, return the processorTransactionId and ‘CANCELLED’
-        If status is DENIED, return declineReason = ‘Insufficient funds’ and ‘DECLINED’
-        Else, return the processorTransactionId and ‘AUTHORIZED’
-    If code is 401, return errorMessage = ‘Invalid credentials’ and ‘FAILED’
-    If code is 422, return errorMessage = ‘Transaction has already been authorised’ and ‘FAILED’
-    Else, I return errorMessage = ‘Unknown error’ and ‘FAILED’
+If code is 201, then
+    If status is VOIDED, return the processorTransactionId and ‘CANCELLED’
+    If status is DENIED, return declineReason = ‘Insufficient funds’ and ‘DECLINED’
+    Else, return the processorTransactionId and ‘AUTHORIZED’
+
+If code is 401, return errorMessage = ‘Invalid credentials’ and ‘FAILED’
+
+If code is 422, return errorMessage = ‘Transaction has already been authorised’ and ‘FAILED’
+
+Else, I return errorMessage = ‘Unknown error’ and ‘FAILED’
+
+```
+
+### cancel
+Writing the request part of the method was very similar to what I had already done in `authorize`, but with fewer details and the types involved were easier to decipher too! I could also reuse the string encoding from `authorise`. 
+
+A successful response should have code `204` and return a `transactionStatus` (and optionally `declineReason` and `errorMessage`). Similarly to creating an authorisation, you cannot create them twice, so I used `422` again. Invalid credentials can always be a problem, so I reused 401 too. I could not think of any test cases where `declineReason` would need to be returned, so I wrote the following conditional statement:
+
+```
+If statusCode is 204, return ‘CANCELLED’
+
+If statusCode is 401 return errorMessage = ‘Invalid credentials’ and ‘FAILED’
+
+If statusCode is 422, return errorMessage = ‘Transaction has already been voided’ and ‘FAILED’
+
+Else, return errorMessage = ‘Unknown error’ and ‘FAILED’
+
 ```
