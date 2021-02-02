@@ -33,3 +33,15 @@ After creating a developer account, I went on to explore the Get Started page of
 After getting my credentials, I started to explore how can I use them to make API calls. From the sample ```cURL``` call to the Orders API, I saw that the ```Authorization``` header can take two authentication schemes : ```Bearer <Access-Token>```, or ```Basic <client_id:secret>```. Although I acknowledge that it is more secure to use the ```Bearer``` scheme, I decided to start with the ```Basic``` scheme for simplicity (Access Tokens have a brief lifetime and require regeneration and extra error handling). I tried to make a sample call to create an order myself, but I was met with an ```“Unable to read x509 certificate”``` error. [This page on StackOverflow](https://stackoverflow.com/questions/60829911/unable-to-read-x509-certificate-when-making-https-calls-to-paypals-subscripti) suggested to use base64 encoding, so I converted the ```<client_id>:<secret>``` string using an online converter tool. That resolved the error and I made the call successfully.  
 
 After skimming through the API Reference, I identified that for this exercise, I will need to use the Orders API. I was happy to find information on almost the whole lifecycle on the same page (cancelling transactions was in the Payments API).
+
+### Creating Orders
+To create an order, we can send a ```POST``` request, where two things are required in the ```body```: ```intent``` and ```purchase_units```. There are two possible values for ```intent```: ```CAPTURE``` and ```AUTHORISE```. Taking the challenge into account, I will need the ```AUTHORISE``` value, so that payments are not captured immediately. I also saw that ```AUTHORISE``` ```intent``` only works when there is one ```purchase_unit```.
+
+### Authorising Payments
+From the response of the create order request, I can get the order ID to use in the authorisation ```POST``` request. The response includes a status code, based on which I should be able to know the results.
+
+### Cancelling Transactions
+Knowing how to cancel transactions was not critical for me to begin development, so I postponed this part of my research until I tried to tackle implementing the cancel method. After being unable to find any reference to cancelling orders or authorisations in the Orders API documentation, I decided to google how to do it, which led me to PayPal’s Payments API. To cancel a transaction, an authorisation needs to be voided by sending a ```POST``` request and the only piece of information I need for that is the transaction ID.
+
+### Payment Button
+In the [Checkout documentation](https://developer.paypal.com/docs/checkout/), I found that the PayPal button’s ```options``` object needs two keys: ```createOrder``` and ```onApprove```. From my previous research on the Orders API, I quickly realised that I can use ```createOrder``` to create an order with some currency and amount and get an order ID on successful response. I can then use that in ```onApprove```, which will call the ```onAuthorizeTransaction``` method with the value of order ID as an argument.
