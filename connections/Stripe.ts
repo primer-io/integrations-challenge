@@ -18,8 +18,8 @@ const StripeConnection: ProcessorConnection<APIKeyCredentials, CardDetails> = {
   website: 'stripe.com',
 
   configuration: {
-    accountId: '...Find a unique ID for the accounnt annd put it here...',
-    apiKey: '...Paste your stripe API key here...',
+    accountId: 'acct_1JCmF7GWUfE3YIZ9',
+    apiKey: 'sk_test_51JCmF7GWUfE3YIZ9cBPtIH9Pxp7yqqqW272BppTbRizG7qhyoiCDEumO25S6A8OE4aPkplZ5ZAHYREiuhYBZ1YUh00UosdH3tA',
   },
 
   /**
